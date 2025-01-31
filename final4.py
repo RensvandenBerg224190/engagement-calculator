@@ -77,6 +77,63 @@ def calculate_averages(df):
     return averages
 
 # Streamlit interface
+
+# Voeg custom CSS toe om Bernina Sans Condensed Extra Bold te gebruiken
+st.markdown(
+    """
+    <style>
+    @font-face {
+        font-family: 'Bernina Sans Condensed Extra Bold';
+        src: url('https://raw.githubusercontent.com/RensvandenBerg224190/engagement-calculator/200d5ef3b0cc5efdfe4900f7598bbc767b0e787c/bernina-sans-condensed-extra-bold.otf') format('opentype');
+    }
+
+    .stApp {
+        background-color: #fbfaee;
+        font-family: 'Bernina Sans Condensed Extra Bold', sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Bernina Sans Condensed Extra Bold', sans-serif;
+    }
+
+    /* Secundaire kleur: #be95fd */
+    .stButton button {
+        background-color: #be95fd;
+        color: black;
+        font-weight: bold;
+    }
+
+    /* Hover state voor de knoppen */
+    .stButton button:hover {
+        background-color: white;
+        color: #be95fd;
+    }
+
+    /* Tabel stijl */
+    .stDataFrame thead th {
+        background-color: #be95fd;
+        color: black;
+        font-weight: bold;
+    }
+
+    .stDataFrame tbody td {
+        color: black;
+    }
+
+    /* Voeg logo toe boven de titel, maak kleiner en verschuif naar links */
+    .stApp img {
+        max-width: 10px;  /* Logo kleiner maken */
+        margin-bottom: 5px;  /* Verklein de ruimte tussen logo en portal */
+        margin-left: 10px;  /* Verplaats het logo naar links */
+    }
+    </style>
+    """, 
+    unsafe_allow_html=True
+)
+
+# Voeg logo toe boven de titel
+st.image("https://raw.githubusercontent.com/RensvandenBerg224190/engagement-calculator/1dffaf3171c6aa00da8df075f6123d9640e2df16/PRIMARY-black.png", use_container_width=True)
+
 st.title('TikTok Video Statistics')
 
 # Gebruiker kan meerdere TikTok URL's invoeren, gescheiden door nieuwe regels
@@ -137,13 +194,6 @@ if st.button("Verwerk URL's"):
             # Toon de tabel met de gemiddelde statistieken
             st.write("### Average Statistics")
             st.dataframe(averages_df)
-
-#            # Toon de video covers als afbeeldingen
-#            for index, row in df.iterrows():
-#                cover_url = videos[index]["Cover URL"]
-#                if cover_url:
-#                    st.write(f"### {row['Username']}")
-#                    st.image(cover_url, width=200)  # Display de coverafbeelding
 
         else:
             st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
