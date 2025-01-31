@@ -39,7 +39,7 @@ def get_video_data(video_url, video_id):
 
         # Bereken de engagement rate (als views groter dan 0 zijn om deling door 0 te voorkomen)
         if views > 0:
-            engagement_rate = round(((likes + comments + shares) / views) * 100, 2)
+            engagement_rate = ((likes + comments + shares) / views) * 100
         else:
             engagement_rate = 0
 
@@ -49,7 +49,7 @@ def get_video_data(video_url, video_id):
             "Likes": likes,
             "Comments": comments,
             "Shares": shares,
-            "Engagement Rate": f"{engagement_rate}%" if engagement_rate > 0 else "0%",
+            "Engagement Rate": engagement_rate,
             "Cover URL": cover_url
         }
     else:
@@ -68,11 +68,11 @@ def get_multiple_videos_data(video_urls):
 # Functie om de gemiddelde statistieken te berekenen
 def calculate_averages(df):
     averages = {
-        "Views": round(df["Views"].mean(), 2),
-        "Likes": round(df["Likes"].mean(), 2),
-        "Comments": round(df["Comments"].mean(), 2),
-        "Shares": round(df["Shares"].mean(), 2),
-        "Engagement Rate": f"{round(df['Engagement Rate'].mean(), 2)}%" if df['Engagement Rate'].mean() > 0 else "0%"
+        "Views": df["Views"].mean(),
+        "Likes": df["Likes"].mean(),
+        "Comments": df["Comments"].mean(),
+        "Shares": df["Shares"].mean(),
+        "Engagement Rate": df["Engagement Rate"].mean()
     }
     return averages
 
