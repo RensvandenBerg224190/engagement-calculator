@@ -138,12 +138,12 @@ if st.button("Verwerk URL's"):
             st.write("### Average Statistics")
             st.dataframe(averages_df)
 
-            # Toon de video covers als afbeeldingen
-            for index, row in df.iterrows():
-                cover_url = videos[index]["Cover URL"]
-                if cover_url:
-                    st.write(f"### {row['Username']}")
-                    st.image(cover_url, width=200)  # Display de coverafbeelding
+#            # Toon de video covers als afbeeldingen
+#            for index, row in df.iterrows():
+#                cover_url = videos[index]["Cover URL"]
+#                if cover_url:
+#                    st.write(f"### {row['Username']}")
+#                    st.image(cover_url, width=200)  # Display de coverafbeelding
 
         else:
             st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
