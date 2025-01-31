@@ -68,11 +68,11 @@ def get_multiple_videos_data(video_urls):
 # Functie om de gemiddelde statistieken te berekenen
 def calculate_averages(df):
     averages = {
-        "Views": df["Views"].mean(),
-        "Likes": df["Likes"].mean(),
-        "Comments": df["Comments"].mean(),
-        "Shares": df["Shares"].mean(),
-        "Engagement Rate": df["Engagement Rate"].mean()
+        "Views": round(df["Views"].mean(), 2),
+        "Likes": round(df["Likes"].mean(), 2),
+        "Comments": round(df["Comments"].mean(), 2),
+        "Shares": round(df["Shares"].mean(), 2),
+        "Engagement Rate": round(df["Engagement Rate"].mean(), 2)
     }
     return averages
 
@@ -85,40 +85,65 @@ urls_input = st.text_area(
     height=300
 )
 
-# Omzetten van de invoer naar een lijst van URL's
-if urls_input:
-    video_urls = urls_input.splitlines()
+# Voeg een knop toe die de gegevens ophaalt bij klikken
+if st.button("Verwerk URL's"):
+    if urls_input:
+        video_urls = urls_input.splitlines()
 
-    # Verkrijg gegevens van de video's
-    videos = get_multiple_videos_data(video_urls)
+        # Verkrijg gegevens van de video's
+        videos = get_multiple_videos_data(video_urls)
 
-    if videos:
-        # Maak een DataFrame om de gegevens in een tabel weer te geven (zonder de 'Cover URL' kolom)
-        df = pd.DataFrame(videos)
+        if videos:
+            # Maak een DataFrame om de gegevens in een tabel weer te geven (zonder de 'Cover URL' kolom)
+            df = pd.DataFrame(videos)
 
-        # Verwijder de 'Cover URL' kolom uit de tabel
-        df = df.drop(columns=["Cover URL"])
+            # Verwijder de 'Cover URL' kolom uit de tabel
+            df = df.drop(columns=["Cover URL"])
 
-        # Toon de tabel met video details (zonder 'Cover URL' kolom)
-        st.write("### Video Details")
-        st.dataframe(df)
+            # Zet de 'Engagement Rate' kolom om naar numeriek, vervang niet-numerieke waarden door NaN
+            df['Engagement Rate'] = pd.to_numeric(df['Engagement Rate'], errors='coerce')
 
-        # Bereken de gemiddelde statistieken
-        averages = calculate_averages(df)
+            # Vervang NaN-waarden door 0
+            df['Engagement Rate'].fillna(0, inplace=True)
 
-        # Maak een DataFrame voor de gemiddelde waarden (zonder 'Username' kolom)
-        averages_df = pd.DataFrame([averages])
+            # Bewaar de originele Engagement Rate zonder '%' voor de berekening, en voeg '%' toe in de weergave
+            df['Engagement Rate (%)'] = df['Engagement Rate'].apply(lambda x: f"{round(x, 2)}%")  # Afronden naar 2 decimalen met '%' toegevoegd
+            
+            # Maak een kopie van df zonder de 'Engagement Rate' kolom
+            df2 = df.drop(columns=["Engagement Rate"])
 
-        # Toon de tabel met de gemiddelde statistieken (zonder 'Username')
-        st.write("### Average Statistics")
-        st.dataframe(averages_df)
+            # Hernoem de kolom 'Engagement Rate (%)' naar 'Engagement Rate' in df2
+            df2 = df2.rename(columns={"Engagement Rate (%)": "Engagement Rate"})
+            
+            # Toon de tabel met video details (zonder 'Cover URL' kolom)
+            st.write("### Video Details")
+            st.dataframe(df2)
 
-        # Toon de video covers als afbeeldingen
-        for index, row in df.iterrows():
-            cover_url = videos[index]["Cover URL"]
-            if cover_url:
-                st.write(f"### {row['Username']}")
-                st.image(cover_url, width=200)  # Display de coverafbeelding
+            # Bereken de gemiddelde statistieken
+            averages = calculate_averages(df)
 
-    else:
-        st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
+            # Maak een DataFrame voor de gemiddelde waarden
+            averages_df = pd.DataFrame([averages])
+
+            # Zet de 'Engagement Rate' in de gemiddelde tabel om naar een percentage string (met '%')
+            averages_df["Engagement Rate (%)"] = averages_df["Engagement Rate"].apply(lambda x: f"{x}%")  # '% toevoegen
+
+            # Verwijder de originele "Engagement Rate" kolom zonder % van de gemiddelde tabel
+            averages_df = averages_df.drop(columns=["Engagement Rate"])
+
+            # Hernoem de kolom 'Engagement Rate (%)' naar 'Engagement Rate' in averages
+            averages_df = averages_df.rename(columns={"Engagement Rate (%)": "Engagement Rate"})
+
+            # Toon de tabel met de gemiddelde statistieken
+            st.write("### Average Statistics")
+            st.dataframe(averages_df)
+
+            # Toon de video covers als afbeeldingen
+            for index, row in df.iterrows():
+                cover_url = videos[index]["Cover URL"]
+                if cover_url:
+                    st.write(f"### {row['Username']}")
+                    st.image(cover_url, width=200)  # Display de coverafbeelding
+
+        else:
+            st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
