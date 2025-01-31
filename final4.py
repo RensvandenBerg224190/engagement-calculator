@@ -93,10 +93,13 @@ if urls_input:
     videos = get_multiple_videos_data(video_urls)
 
     if videos:
-        # Maak een DataFrame om de gegevens in een tabel weer te geven (zonder de 'Cover' kolom)
+        # Maak een DataFrame om de gegevens in een tabel weer te geven (zonder de 'Cover URL' kolom)
         df = pd.DataFrame(videos)
 
-        # Toon de tabel met video details (zonder 'Cover' kolom)
+        # Verwijder de 'Cover URL' kolom uit de tabel
+        df = df.drop(columns=["Cover URL"])
+
+        # Toon de tabel met video details (zonder 'Cover URL' kolom)
         st.write("### Video Details")
         st.dataframe(df)
 
@@ -112,7 +115,7 @@ if urls_input:
 
         # Toon de video covers als afbeeldingen
         for index, row in df.iterrows():
-            cover_url = row['Cover URL']
+            cover_url = videos[index]["Cover URL"]
             if cover_url:
                 st.write(f"### {row['Username']}")
                 st.image(cover_url, width=200)  # Display de coverafbeelding
