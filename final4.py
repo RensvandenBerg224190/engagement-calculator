@@ -65,14 +65,21 @@ def calculate_averages(df):
 st.markdown(
     """
     <style>
-    /* Stijlen voor de achtergrond en tekst */
-    .stApp {
-        background-color: #fbfaee;
-        font-family: 'Arial', sans-serif;
+    @font-face {
+        font-family: 'Bernina Sans Condensed Extra Bold';
+        src: url('https://raw.githubusercontent.com/RensvandenBerg224190/engagement-calculator/db7fd33f5020cc9d0a6b01d1769938a03fb9fb42/bernina-sans-condensed-extra-bold.otf') format('opentype');
     }
 
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Arial', sans-serif;
+        font-family: 'Bernina Sans Condensed Extra Bold', sans-serif !important;
+    }
+
+    /* Normale tekst in Poppins */
+    .stApp {
+        background-color: #fbfaee;
+        font-family: 'Poppins', sans-serif;
     }
 
     /* Secundaire kleur: #be95fd */
@@ -90,7 +97,7 @@ st.markdown(
     /* Stijlen voor de tabel */
     .stDataFrame thead th {
         background-color: #be95fd;
-        color: black;
+        color: #000000;  /* Zet de tekstkleur naar zwart */
         font-weight: bold;
     }
 
