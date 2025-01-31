@@ -1,8 +1,10 @@
-import streamlit as st
 import requests
+import pandas as pd
+import streamlit as st
+from IPython.display import Image, display, HTML
 
-# Functie om engagement rate voor een enkele TikTok video te berekenen
-def calculate_engagement_rate(video_url, video_id):
+# Functie om gegevens van een TikTok-video op te halen
+def get_video_data(video_url, video_id):
     url = "https://tiktok-scraper2.p.rapidapi.com/video/info_v2"
     querystring = {"video_url": video_url, "video_id": video_id}
 
@@ -11,19 +13,26 @@ def calculate_engagement_rate(video_url, video_id):
         "x-rapidapi-host": "tiktok-scraper2.p.rapidapi.com"
     }
 
+    # Verstuur het verzoek naar de API
     response = requests.get(url, headers=headers, params=querystring)
 
     # Haal de JSON-gegevens op
     data = response.json()
 
-    # Zorg ervoor dat de 'itemInfo' en 'itemStruct' aanwezig zijn in de response
+    # Controleer of de verwachte gegevens aanwezig zijn
     if 'itemInfo' in data and 'itemStruct' in data['itemInfo']:
         item = data['itemInfo']['itemStruct']
+        
+        # Verkrijg de username van de auteur
+        username = item.get('author', {}).get('uniqueId', 'Onbekend')
+        
+        # Haal de cover URL uit de JSON-gegevens
+        cover_url = item.get("video", {}).get("cover", "")
         
         # Haal de statistieken op
         stats = item.get('stats', {})
 
-        # Verkrijg de gewenste statistieken, als deze aanwezig zijn
+        # Verkrijg de gewenste statistieken
         likes = stats.get("diggCount", 0)
         views = stats.get("playCount", 0)
         comments = stats.get("commentCount", 0)
@@ -35,37 +44,44 @@ def calculate_engagement_rate(video_url, video_id):
         else:
             engagement_rate = 0
 
-        return engagement_rate
+        return {
+            "Username": username,
+            "Views": views,
+            "Likes": likes,
+            "Comments": comments,
+            "Shares": shares,
+            "Engagement Rate": engagement_rate
+        }
     else:
-        print(f"De verwachte gegevens zijn niet gevonden voor video {video_url}")
         return None
 
-# Functie om de gemiddelde engagement rate te berekenen
-def calculate_average_engagement_rate(video_urls):
-    total_engagement = 0
-    count = 0
-
+# Functie om gegevens van meerdere video's op te halen
+def get_multiple_videos_data(video_urls):
+    video_data = []
     for video_url in video_urls:
         video_id = video_url.split("/")[-1]  # Haal het video_id uit de URL
-        engagement_rate = calculate_engagement_rate(video_url, video_id)
-        
-        if engagement_rate is not None:
-            total_engagement += engagement_rate
-            count += 1
+        data = get_video_data(video_url, video_id)
+        if data:
+            video_data.append(data)
+    return video_data
 
-    # Bereken de gemiddelde engagement rate
-    if count > 0:
-        average_engagement_rate = total_engagement / count
-        return average_engagement_rate
-    else:
-        return 0
+# Functie om de gemiddelde statistieken te berekenen
+def calculate_averages(df):
+    averages = {
+        "Views": df["Views"].mean(),
+        "Likes": df["Likes"].mean(),
+        "Comments": df["Comments"].mean(),
+        "Shares": df["Shares"].mean(),
+        "Engagement Rate": df["Engagement Rate"].mean()
+    }
+    return averages
 
 # Streamlit interface
-st.title('TikTok Engagement Rate Calculator')
+st.title('TikTok Video Statistics')
 
-# Gebruiker kan meerdere TikTok URL's invoeren, max 50
+# Gebruiker kan meerdere TikTok URL's invoeren, gescheiden door nieuwe regels
 urls_input = st.text_area(
-    "Voer de TikTok video-URL's in, gescheiden door een nieuwe regel (max 50 URLs):",
+    "Voer de TikTok video-URL's in, gescheiden door een nieuwe regel:",
     height=300
 )
 
@@ -73,15 +89,26 @@ urls_input = st.text_area(
 if urls_input:
     video_urls = urls_input.splitlines()
 
-    # Zorg ervoor dat het aantal URL's niet groter is dan 50
-    if len(video_urls) > 50:
-        st.error("Je kunt maximaal 50 URL's invoeren.")
-    else:
-        # Bereken de gemiddelde engagement rate
-        if st.button("Bereken Gemiddelde Engagement Rate"):
-            average_engagement_rate = calculate_average_engagement_rate(video_urls)
+    # Verkrijg gegevens van de video's
+    videos = get_multiple_videos_data(video_urls)
 
-            if average_engagement_rate > 0:
-                st.success(f"De gemiddelde engagement rate is: {average_engagement_rate:.2f}%")
-            else:
-                st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
+    if videos:
+        # Maak een DataFrame om de gegevens in een tabel weer te geven (zonder de 'Cover' kolom)
+        df = pd.DataFrame(videos)
+
+        # Toon de tabel met video details (zonder 'Cover')
+        st.write("### Video Details")
+        st.dataframe(df)
+
+        # Bereken de gemiddelde statistieken
+        averages = calculate_averages(df)
+
+        # Maak een DataFrame voor de gemiddelde waarden (zonder 'Username' kolom)
+        averages_df = pd.DataFrame([averages])
+
+        # Toon de tabel met de gemiddelde statistieken (zonder 'Username')
+        st.write("### Average Statistics")
+        st.dataframe(averages_df)
+
+    else:
+        st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
