@@ -35,30 +35,42 @@ def calculate_engagement_rate(video_url, video_id):
         else:
             engagement_rate = 0
 
-        return engagement_rate
+        return engagement_rate, likes, views, comments, shares
     else:
         print(f"De verwachte gegevens zijn niet gevonden voor video {video_url}")
-        return None
+        return None, 0, 0, 0, 0
 
-# Functie om de gemiddelde engagement rate te berekenen
+# Functie om de gemiddelde engagement rate en statistieken te berekenen
 def calculate_average_engagement_rate(video_urls):
     total_engagement = 0
+    total_likes = 0
+    total_views = 0
+    total_comments = 0
+    total_shares = 0
     count = 0
 
     for video_url in video_urls:
         video_id = video_url.split("/")[-1]  # Haal het video_id uit de URL
-        engagement_rate = calculate_engagement_rate(video_url, video_id)
+        engagement_rate, likes, views, comments, shares = calculate_engagement_rate(video_url, video_id)
         
         if engagement_rate is not None:
             total_engagement += engagement_rate
+            total_likes += likes
+            total_views += views
+            total_comments += comments
+            total_shares += shares
             count += 1
 
-    # Bereken de gemiddelde engagement rate
+    # Bereken de gemiddelde engagement rate en statistieken
     if count > 0:
         average_engagement_rate = total_engagement / count
-        return average_engagement_rate
+        average_likes = total_likes / count
+        average_views = total_views / count
+        average_comments = total_comments / count
+        average_shares = total_shares / count
+        return average_engagement_rate, average_likes, average_views, average_comments, average_shares
     else:
-        return 0
+        return 0, 0, 0, 0, 0
 
 # Streamlit interface
 st.title('TikTok Engagement Rate Calculator')
@@ -77,11 +89,15 @@ if urls_input:
     if len(video_urls) > 50:
         st.error("Je kunt maximaal 50 URL's invoeren.")
     else:
-        # Bereken de gemiddelde engagement rate
+        # Bereken de gemiddelde engagement rate en statistieken
         if st.button("Bereken Gemiddelde Engagement Rate"):
-            average_engagement_rate = calculate_average_engagement_rate(video_urls)
+            average_engagement_rate, avg_likes, avg_views, avg_comments, avg_shares = calculate_average_engagement_rate(video_urls)
 
             if average_engagement_rate > 0:
                 st.success(f"De gemiddelde engagement rate is: {average_engagement_rate:.2f}%")
+                st.write(f"Gemiddeld aantal Likes: {avg_likes:.0f}")
+                st.write(f"Gemiddeld aantal Views: {avg_views:.0f}")
+                st.write(f"Gemiddeld aantal Comments: {avg_comments:.0f}")
+                st.write(f"Gemiddeld aantal Shares: {avg_shares:.0f}")
             else:
                 st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
