@@ -61,6 +61,17 @@ def calculate_averages(df):
     }
     return averages
 
+# Functie om de totale sommen van de statistieken te berekenen
+def calculate_totals(df):
+    totals = {
+        "Views": int(df["Views"].sum()),
+        "Likes": int(df["Likes"].sum()),
+        "Comments": int(df["Comments"].sum()),
+        "Shares": int(df["Shares"].sum()),
+        "Engagement Rate": "-"  # Engagement Rate is een gemiddelde, dus we laten dit leeg
+    }
+    return totals
+
 # Streamlit interface
 st.markdown(
     """
@@ -142,12 +153,26 @@ if st.button("Verwerk URL's"):
             st.write("### Video Details")
             st.dataframe(df2)
 
+            # Bereken totalen en gemiddelden
+            totals = calculate_totals(df)
             averages = calculate_averages(df)
+
+            totals_df = pd.DataFrame([totals])
             averages_df = pd.DataFrame([averages])
+
+            # Verander de Engagement Rate naar een percentage weergave in averages
             averages_df["Engagement Rate (%)"] = averages_df["Engagement Rate"].apply(lambda x: f"{x}%")
             averages_df = averages_df.drop(columns=["Engagement Rate"]).rename(columns={"Engagement Rate (%)": "Engagement Rate"})
+            
+            totals2_df = totals_df.drop(columns=["Engagement Rate"])
 
-            st.write("### Average Statistics")
-            st.dataframe(averages_df)
+            # Weergave van Total en Average Statistics naast elkaar
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("### Total Statistics")
+                st.dataframe(totals2_df)
+            with col2:
+                st.write("### Average Statistics")
+                st.dataframe(averages_df)
         else:
             st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
