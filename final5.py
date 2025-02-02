@@ -100,12 +100,15 @@ if st.button("Verwerk URL's"):
             st.dataframe(pd.DataFrame([df_for_calculation.sum(numeric_only=True)]))
 
             # Bereken gemiddelde statistieken inclusief 'Engagement Rate' als percentage
-            df_for_avg = df.drop(columns=["Cover URL"])
+            df_for_avg = df.drop(columns=["Cover URL", "Engagement Rate (%)"])
 
             # Maak de Engagement Rate percentage kolom opnieuw als een numerieke waarde voor gemiddelde berekeningen
             df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: round(x, 2))
 
+            # Zet de Engagement Rate om naar percentage vóór de berekening van gemiddelde statistieken
+            df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: f"{x}%")
+
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(2)]))
+            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(0)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
