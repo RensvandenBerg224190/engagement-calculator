@@ -1,26 +1,76 @@
-# Functie om de gemiddelde statistieken te berekenen
-def calculate_averages(df):
-    averages = {
-        "Views": round(df["Views"].mean(), 2),
-        "Likes": round(df["Likes"].mean(), 2),
-        "Comments": round(df["Comments"].mean(), 2),
-        "Shares": round(df["Shares"].mean(), 2),
-        "Engagement Rate": round(df["Engagement Rate"].mean(), 2)  # Voeg hier de gemiddelde Engagement Rate toe
-    }
-    return averages
+import requests
+import pandas as pd
+import streamlit as st
 
-# Functie om de totale sommen van de statistieken te berekenen
-def calculate_totals(df):
-    totals = {
-        "Views": int(df["Views"].sum()),
-        "Likes": int(df["Likes"].sum()),
-        "Comments": int(df["Comments"].sum()),
-        "Shares": int(df["Shares"].sum()),
-        "Engagement Rate": "-"  # Engagement Rate is een gemiddelde, dus we laten dit leeg
-    }
-    return totals
+# Geheimen ophalen
+USERNAME = st.secrets["auth"]["username"]
+PASSWORD = st.secrets["auth"]["password"]
 
-# Verwerking van de video-URL's en het weergeven van statistieken
+# Loginstatus en pagina bijhouden
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "page" not in st.session_state:
+    st.session_state.page = "login"
+
+# Loginpagina weergeven als gebruiker niet is ingelogd
+if st.session_state.page == "login":
+    st.title("Login")
+    input_username = st.text_input("Gebruikersnaam")
+    input_password = st.text_input("Wachtwoord", type="password")
+
+    if st.button("Inloggen"):
+        if input_username == USERNAME and input_password == PASSWORD:
+            st.session_state.logged_in = True
+            st.session_state.page = "main"  # Switch naar hoofdscherm
+            st.rerun()  # 🔥 Gebruik de nieuwe functie in plaats van experimental_rerun
+        else:
+            st.error("Onjuiste gebruikersnaam of wachtwoord!")
+    st.stop()
+
+# === Vanaf hier alleen als de gebruiker is ingelogd ===
+st.title('TikTok Video Statistics')
+
+# Functie om gegevens van een TikTok-video op te halen
+def get_video_data(video_url, video_id):
+    url = "https://tiktok-scraper2.p.rapidapi.com/video/info_v2"
+    querystring = {"video_url": video_url, "video_id": video_id}
+
+    headers = {
+        "x-rapidapi-key": st.secrets["auth"]["api_key"],  # API-key uit secrets
+        "x-rapidapi-host": "tiktok-scraper2.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)
+    data = response.json()
+
+    if 'itemInfo' in data and 'itemStruct' in data['itemInfo']:
+        item = data['itemInfo']['itemStruct']
+        username = item.get('author', {}).get('uniqueId', 'Onbekend')
+        cover_url = item.get("video", {}).get("cover", "")
+        stats = item.get('stats', {})
+
+        likes = stats.get("diggCount", 0)
+        views = stats.get("playCount", 0)
+        comments = stats.get("commentCount", 0)
+        shares = stats.get("shareCount", 0)
+
+        engagement_rate = ((likes + comments + shares) / views) * 100 if views > 0 else 0
+
+        return {
+            "Username": username,
+            "Views": views,
+            "Likes": likes,
+            "Comments": comments,
+            "Shares": shares,
+            "Engagement Rate": engagement_rate,
+            "Cover URL": cover_url
+        }
+    else:
+        return None
+
+# Gebruiker kan meerdere TikTok URL's invoeren
+urls_input = st.text_area("Voer de TikTok video-URL's in, gescheiden door een nieuwe regel:", height=300)
+
 if st.button("Verwerk URL's"):
     if urls_input:
         video_urls = urls_input.splitlines()
@@ -36,14 +86,11 @@ if st.button("Verwerk URL's"):
             st.write("### Video Details")
             st.dataframe(df)
 
-            # Bereken en toon de totale statistieken
-            totals = calculate_totals(df)
+            # Bereken totalen en gemiddelden
             st.write("### Total Statistics")
-            st.dataframe(pd.DataFrame([totals]))
+            st.dataframe(pd.DataFrame([df.sum(numeric_only=True)]))
 
-            # Bereken en toon de gemiddelde statistieken inclusief Engagement Rate
-            averages = calculate_averages(df)
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([averages]))
+            st.dataframe(pd.DataFrame([df.mean(numeric_only=True).round(2)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
