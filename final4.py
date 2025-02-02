@@ -12,36 +12,21 @@ def get_video_data(video_url, video_id):
         "x-rapidapi-host": "tiktok-scraper2.p.rapidapi.com"
     }
 
-    # Verstuur het verzoek naar de API
     response = requests.get(url, headers=headers, params=querystring)
-
-    # Haal de JSON-gegevens op
     data = response.json()
 
-    # Controleer of de verwachte gegevens aanwezig zijn
     if 'itemInfo' in data and 'itemStruct' in data['itemInfo']:
         item = data['itemInfo']['itemStruct']
-        
-        # Verkrijg de username van de auteur
         username = item.get('author', {}).get('uniqueId', 'Onbekend')
-        
-        # Haal de cover URL uit de JSON-gegevens
         cover_url = item.get("video", {}).get("cover", "")
-        
-        # Haal de statistieken op
         stats = item.get('stats', {})
 
-        # Verkrijg de gewenste statistieken
         likes = stats.get("diggCount", 0)
         views = stats.get("playCount", 0)
         comments = stats.get("commentCount", 0)
         shares = stats.get("shareCount", 0)
 
-        # Bereken de engagement rate (als views groter dan 0 zijn om deling door 0 te voorkomen)
-        if views > 0:
-            engagement_rate = ((likes + comments + shares) / views) * 100
-        else:
-            engagement_rate = 0
+        engagement_rate = ((likes + comments + shares) / views) * 100 if views > 0 else 0
 
         return {
             "Username": username,
@@ -59,7 +44,7 @@ def get_video_data(video_url, video_id):
 def get_multiple_videos_data(video_urls):
     video_data = []
     for video_url in video_urls:
-        video_id = video_url.split("/")[-1]  # Haal het video_id uit de URL
+        video_id = video_url.split("/")[-1]  
         data = get_video_data(video_url, video_id)
         if data:
             video_data.append(data)
@@ -76,74 +61,118 @@ def calculate_averages(df):
     }
     return averages
 
-# Streamlit interface
-st.title('TikTok Video Statistics')
+# Functie om de totale sommen van de statistieken te berekenen
+def calculate_totals(df):
+    totals = {
+        "Views": int(df["Views"].sum()),
+        "Likes": int(df["Likes"].sum()),
+        "Comments": int(df["Comments"].sum()),
+        "Shares": int(df["Shares"].sum()),
+        "Engagement Rate": "-"  # Engagement Rate is een gemiddelde, dus we laten dit leeg
+    }
+    return totals
 
-# Gebruiker kan meerdere TikTok URL's invoeren, gescheiden door nieuwe regels
-urls_input = st.text_area(
-    "Voer de TikTok video-URL's in, gescheiden door een nieuwe regel:",
-    height=300
+# Streamlit interface
+st.markdown(
+    """
+    <style>
+    @font-face {
+        font-family: 'Bernina Sans Condensed Extra Bold';
+        src: url('https://raw.githubusercontent.com/RensvandenBerg224190/engagement-calculator/db7fd33f5020cc9d0a6b01d1769938a03fb9fb42/bernina-sans-condensed-extra-bold.otf') format('opentype');
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Bernina Sans Condensed Extra Bold', sans-serif !important;
+    }
+
+    /* Normale tekst in Poppins */
+    .stApp {
+        background-color: #fbfaee;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Secundaire kleur: #be95fd */
+    .stButton button {
+        background-color: #be95fd;
+        color: black;
+        font-weight: bold;
+    }
+
+    .stButton button:hover {
+        background-color: white;
+        color: #be95fd;
+    }
+
+    /* Stijlen voor de tabel */
+    .stDataFrame thead th {
+        background-color: #be95fd;
+        color: #000000;  /* Zet de tekstkleur naar zwart */
+        font-weight: bold;
+    }
+
+    .stDataFrame tbody td {
+        color: black;
+    }
+
+    /* Logo grootte aanpassen */
+    img[alt=""] {
+        max-width: 100px !important;
+        height: auto;
+    }
+    </style>
+    """, 
+    unsafe_allow_html=True
 )
 
-# Voeg een knop toe die de gegevens ophaalt bij klikken
+# Voeg logo toe met aangepaste breedte
+st.image(
+    "https://raw.githubusercontent.com/RensvandenBerg224190/engagement-calculator/1dffaf3171c6aa00da8df075f6123d9640e2df16/PRIMARY-black.png",
+    width=100  # Logo breedte aanpassen
+)
+
+st.title('TikTok Video Statistics')
+
+# Gebruiker kan meerdere TikTok URL's invoeren
+urls_input = st.text_area("Voer de TikTok video-URL's in, gescheiden door een nieuwe regel:", height=300)
+
 if st.button("Verwerk URL's"):
     if urls_input:
         video_urls = urls_input.splitlines()
-
-        # Verkrijg gegevens van de video's
         videos = get_multiple_videos_data(video_urls)
 
         if videos:
-            # Maak een DataFrame om de gegevens in een tabel weer te geven (zonder de 'Cover URL' kolom)
             df = pd.DataFrame(videos)
-
-            # Verwijder de 'Cover URL' kolom uit de tabel
             df = df.drop(columns=["Cover URL"])
-
-            # Zet de 'Engagement Rate' kolom om naar numeriek, vervang niet-numerieke waarden door NaN
             df['Engagement Rate'] = pd.to_numeric(df['Engagement Rate'], errors='coerce')
-
-            # Vervang NaN-waarden door 0
             df['Engagement Rate'].fillna(0, inplace=True)
+            df['Engagement Rate (%)'] = df['Engagement Rate'].apply(lambda x: f"{round(x, 2)}%")
+            df2 = df.drop(columns=["Engagement Rate"]).rename(columns={"Engagement Rate (%)": "Engagement Rate"})
 
-            # Bewaar de originele Engagement Rate zonder '%' voor de berekening, en voeg '%' toe in de weergave
-            df['Engagement Rate (%)'] = df['Engagement Rate'].apply(lambda x: f"{round(x, 2)}%")  # Afronden naar 2 decimalen met '%' toegevoegd
-            
-            # Maak een kopie van df zonder de 'Engagement Rate' kolom
-            df2 = df.drop(columns=["Engagement Rate"])
-
-            # Hernoem de kolom 'Engagement Rate (%)' naar 'Engagement Rate' in df2
-            df2 = df2.rename(columns={"Engagement Rate (%)": "Engagement Rate"})
-            
-            # Toon de tabel met video details (zonder 'Cover URL' kolom)
             st.write("### Video Details")
             st.dataframe(df2)
 
-            # Bereken de gemiddelde statistieken
+            # Bereken totalen en gemiddelden
+            totals = calculate_totals(df)
             averages = calculate_averages(df)
 
-            # Maak een DataFrame voor de gemiddelde waarden
+            totals_df = pd.DataFrame([totals])
             averages_df = pd.DataFrame([averages])
 
-            # Zet de 'Engagement Rate' in de gemiddelde tabel om naar een percentage string (met '%')
-            averages_df["Engagement Rate (%)"] = averages_df["Engagement Rate"].apply(lambda x: f"{x}%")  # '% toevoegen
+            # Verander de Engagement Rate naar een percentage weergave in averages
+            averages_df["Engagement Rate (%)"] = averages_df["Engagement Rate"].apply(lambda x: f"{x}%")
+            averages_df = averages_df.drop(columns=["Engagement Rate"]).rename(columns={"Engagement Rate (%)": "Engagement Rate"})
+            
+            totals2_df = totals_df.drop(columns=["Engagement Rate"])
 
-            # Verwijder de originele "Engagement Rate" kolom zonder % van de gemiddelde tabel
-            averages_df = averages_df.drop(columns=["Engagement Rate"])
-
-            # Hernoem de kolom 'Engagement Rate (%)' naar 'Engagement Rate' in averages
-            averages_df = averages_df.rename(columns={"Engagement Rate (%)": "Engagement Rate"})
-
-            # Toon de tabel met de gemiddelde statistieken
-            st.write("### Average Statistics")
-            st.dataframe(averages_df)
-
-            # Toon de video covers als afbeeldingen
-            for index, row in df.iterrows():
-                cover_url = videos[index]["Cover URL"]
-                if cover_url:
-                    st.write(f"### {row['Username']}")
-                    st.image(cover_url, width=200)  # Display de coverafbeelding
-
+            # Weergave van Total en Average Statistics naast elkaar
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("### Total Statistics")
+                st.dataframe(totals2_df)
+            with col2:
+                st.write("### Average Statistics")
+                st.dataframe(averages_df)
         else:
             st.error("Er zijn geen geldige gegevens gevonden voor de ingevoerde video's.")
