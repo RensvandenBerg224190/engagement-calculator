@@ -22,7 +22,7 @@ if st.session_state.page == "login":
         if input_username == USERNAME and input_password == PASSWORD:
             st.session_state.logged_in = True
             st.session_state.page = "main"  # Switch naar hoofdscherm
-            st.experimental_rerun()
+            st.rerun()  # 🔥 Gebruik de nieuwe functie in plaats van experimental_rerun
         else:
             st.error("Onjuiste gebruikersnaam of wachtwoord!")
     st.stop()
