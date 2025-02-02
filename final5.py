@@ -6,17 +6,27 @@ import streamlit as st
 USERNAME = st.secrets["auth"]["username"]
 PASSWORD = st.secrets["auth"]["password"]
 
-# Login interface
-st.title("Login")
-input_username = st.text_input("Gebruikersnaam")
-input_password = st.text_input("Wachtwoord", type="password")
+# Controleer of gebruiker al ingelogd is
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
 
-if st.button("Inloggen"):
-    if input_username == USERNAME and input_password == PASSWORD:
-        st.success("Succesvol ingelogd!")
-    else:
-        st.error("Onjuiste gebruikersnaam of wachtwoord!")
-        st.stop()
+# Login interface
+if not st.session_state["logged_in"]:
+    st.title("Login")
+    input_username = st.text_input("Gebruikersnaam")
+    input_password = st.text_input("Wachtwoord", type="password")
+
+    if st.button("Inloggen"):
+        if input_username == USERNAME and input_password == PASSWORD:
+            st.session_state["logged_in"] = True
+            st.success("Succesvol ingelogd! 🎉")
+            st.rerun()  # Vernieuw de pagina om de TikTok-portal te tonen
+        else:
+            st.error("Onjuiste gebruikersnaam of wachtwoord!")
+            st.stop()
+
+# ✅ Alleen zichtbaar NA inloggen
+st.title('TikTok Video Statistics')
 
 # Functie om gegevens van een TikTok-video op te halen
 def get_video_data(video_url, video_id):
@@ -87,9 +97,6 @@ def calculate_totals(df):
         "Engagement Rate": "-"
     }
     return totals
-
-# Streamlit interface
-st.title('TikTok Video Statistics')
 
 # Gebruiker kan meerdere TikTok URL's invoeren
 urls_input = st.text_area("Voer de TikTok video-URL's in, gescheiden door een nieuwe regel:", height=300)
