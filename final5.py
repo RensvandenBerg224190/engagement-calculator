@@ -6,12 +6,14 @@ import streamlit as st
 USERNAME = st.secrets["auth"]["username"]
 PASSWORD = st.secrets["auth"]["password"]
 
-# Loginstatus bijhouden
+# Loginstatus en pagina bijhouden
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+if "page" not in st.session_state:
+    st.session_state.page = "login"
 
 # Loginpagina weergeven als gebruiker niet is ingelogd
-if not st.session_state.logged_in:
+if st.session_state.page == "login":
     st.title("Login")
     input_username = st.text_input("Gebruikersnaam")
     input_password = st.text_input("Wachtwoord", type="password")
@@ -19,13 +21,13 @@ if not st.session_state.logged_in:
     if st.button("Inloggen"):
         if input_username == USERNAME and input_password == PASSWORD:
             st.session_state.logged_in = True
-            st.experimental_rerun()  # Pagina herladen om naar de statistiekenpagina te gaan
+            st.session_state.page = "main"  # Switch naar hoofdscherm
+            st.experimental_rerun()
         else:
             st.error("Onjuiste gebruikersnaam of wachtwoord!")
+    st.stop()
 
-    st.stop()  # Stop verdere uitvoering als gebruiker niet is ingelogd
-
-# --- Vanaf hier wordt alleen weergegeven als gebruiker is ingelogd ---
+# === Vanaf hier alleen als de gebruiker is ingelogd ===
 st.title('TikTok Video Statistics')
 
 # Functie om gegevens van een TikTok-video op te halen
@@ -34,7 +36,7 @@ def get_video_data(video_url, video_id):
     querystring = {"video_url": video_url, "video_id": video_id}
 
     headers = {
-        "x-rapidapi-key": "87f7d04a69msh064fc11c54bbcd5p1e1223jsn039442082ea2",
+        "x-rapidapi-key": st.secrets["auth"]["api_key"],  # API-key uit secrets
         "x-rapidapi-host": "tiktok-scraper2.p.rapidapi.com"
     }
 
