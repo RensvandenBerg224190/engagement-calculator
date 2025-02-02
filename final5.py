@@ -105,7 +105,10 @@ if st.button("Verwerk URL's"):
             # Maak de Engagement Rate percentage kolom opnieuw als een numerieke waarde voor gemiddelde berekeningen
             df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: round(x, 2))
 
+            # Converteer Engagement Rate naar percentage
+            df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: f"{x}%")
+
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(2)]))
+            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(0)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
