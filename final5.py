@@ -6,21 +6,6 @@ import streamlit as st
 USERNAME = st.secrets["auth"]["username"]
 PASSWORD = st.secrets["auth"]["password"]
 
-# Logo toevoegen bovenaan in de pagina
-logo_url = "https://github.com/RensvandenBerg224190/engagement-calculator/blob/3a91e89ed1214871a96674c0a255ae85f19f3f3b/PRIMARY-medium%20slate%20blue.png"
-st.markdown(f"""
-    <style>
-        img[alt=""] {{
-            width: 100px !important;
-            height: 100px !important;
-            position: absolute;
-            top: 10px;
-            left: 10px;
-        }}
-    </style>
-    <img src="{logo_url}" alt="Logo">
-""", unsafe_allow_html=True)
-
 # Loginstatus en pagina bijhouden
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -119,9 +104,6 @@ if st.button("Verwerk URL's"):
 
             # Maak de Engagement Rate percentage kolom opnieuw als een numerieke waarde voor gemiddelde berekeningen
             df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: round(x, 2))
-
-            # Voeg % toe bij engagement rate voor gemiddelde statistieken
-            df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: f"{x}%")
 
             st.write("### Average Statistics")
             st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(2)]))
