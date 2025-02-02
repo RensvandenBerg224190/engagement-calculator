@@ -12,6 +12,35 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
+# Stel de paginaconfiguratie in (je kunt hier ook de lichtmodus/donker modus aanpassen)
+st.set_page_config(page_title="TikTok Video Statistics", page_icon=":guardsman:", layout="wide", initial_sidebar_state="expanded")
+
+# Controleren of we in dark mode of light mode zitten
+if st.sidebar.checkbox("Dark Mode", value=False):  # Dit is een eenvoudige manier om de modus te wijzigen
+    mode = "dark"
+else:
+    mode = "light"
+
+# Logo's voor de verschillende modi
+if mode == "light":
+    logo_url = "https://github.com/RensvandenBerg224190/engagement-calculator/blob/0b1ba9b1668b90522128abee2ce274d78cf6ae56/PRIMARY-black.png?raw=true"
+else:
+    logo_url = "https://github.com/RensvandenBerg224190/engagement-calculator/blob/0b1ba9b1668b90522128abee2ce274d78cf6ae56/PRIMARY-ivory%20white.png?raw=true"
+
+# Logo toevoegen bovenaan in de pagina
+st.markdown(f"""
+    <style>
+        img[alt=""] {{
+            max-width: 100px !important;
+            height: auto;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }}
+    </style>
+    <img src="{logo_url}" alt="Logo">
+""", unsafe_allow_html=True)
+
 # Loginpagina weergeven als gebruiker niet is ingelogd
 if st.session_state.page == "login":
     st.title("Login")
@@ -100,12 +129,15 @@ if st.button("Verwerk URL's"):
             st.dataframe(pd.DataFrame([df_for_calculation.sum(numeric_only=True)]))
 
             # Bereken gemiddelde statistieken inclusief 'Engagement Rate' als percentage
-            df_for_avg = df.drop(columns=["Cover URL"])
+            df_for_avg = df.drop(columns=["Cover URL", "Engagement Rate (%)"])
 
             # Maak de Engagement Rate percentage kolom opnieuw als een numerieke waarde voor gemiddelde berekeningen
             df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: round(x, 2))
 
+            # Zet de Engagement Rate om naar percentage vóór de berekening van gemiddelde statistieken
+            df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: f"{x}%")
+
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(2)]))
+            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(0)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
