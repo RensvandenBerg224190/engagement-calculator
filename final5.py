@@ -91,6 +91,6 @@ if st.button("Verwerk URL's"):
             st.dataframe(pd.DataFrame([df.sum(numeric_only=True)]))
 
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([df.mean(numeric_only=True)]))
+            st.dataframe(pd.DataFrame([df.mean(numeric_only=True).round(2)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
