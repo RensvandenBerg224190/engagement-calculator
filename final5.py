@@ -12,6 +12,26 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
+# Stel de paginaconfiguratie in
+st.set_page_config(page_title="TikTok Video Statistics", page_icon=":guardsman:", layout="wide", initial_sidebar_state="expanded")
+
+# Altijd hetzelfde logo bovenaan
+logo_url = "https://github.com/RensvandenBerg224190/engagement-calculator/blob/3a91e89ed1214871a96674c0a255ae85f19f3f3b/PRIMARY-medium%20slate%20blue.png?raw=true"
+
+# Logo toevoegen bovenaan in de pagina
+st.markdown(f"""
+    <style>
+        img[alt=""] {{
+            max-width: 100px !important;
+            height: auto;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }}
+    </style>
+    <img src="{logo_url}" alt="Logo">
+""", unsafe_allow_html=True)
+
 # Loginpagina weergeven als gebruiker niet is ingelogd
 if st.session_state.page == "login":
     st.title("Login")
@@ -100,12 +120,15 @@ if st.button("Verwerk URL's"):
             st.dataframe(pd.DataFrame([df_for_calculation.sum(numeric_only=True)]))
 
             # Bereken gemiddelde statistieken inclusief 'Engagement Rate' als percentage
-            df_for_avg = df.drop(columns=["Cover URL"])
+            df_for_avg = df.drop(columns=["Cover URL", "Engagement Rate (%)"])
 
             # Maak de Engagement Rate percentage kolom opnieuw als een numerieke waarde voor gemiddelde berekeningen
             df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: round(x, 2))
 
+            # Zet de Engagement Rate om naar percentage vóór de berekening van gemiddelde statistieken
+            df_for_avg['Engagement Rate'] = df_for_avg['Engagement Rate'].apply(lambda x: f"{x}%")
+
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(2)]))
+            st.dataframe(pd.DataFrame([df_for_avg.mean(numeric_only=True).round(0)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
