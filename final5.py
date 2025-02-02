@@ -84,18 +84,23 @@ if st.button("Verwerk URL's"):
             # Weergeef de engagement rate als percentage
             df['Engagement Rate (%)'] = df['Engagement Rate'].apply(lambda x: f"{round(x, 2)}%")
 
-            # Hier behouden we de 'Engagement Rate' kolom voor de berekeningen
-            df_for_calculation = df.drop(columns=["Cover URL", "Engagement Rate (%)"])
+            # Verwijder de 'Cover URL' en 'Engagement Rate' kolommen voor de Video Details
+            df_details = df.drop(columns=["Cover URL", "Engagement Rate"])
+
+            # Hernoem 'Engagement Rate (%)' naar 'Engagement Rate'
+            df_details = df_details.rename(columns={"Engagement Rate (%)": "Engagement Rate"})
 
             st.write("### Video Details")
-            st.dataframe(df)
+            st.dataframe(df_details)
 
-            # Bereken totalen
+            # Bereken totalen zonder 'Engagement Rate'
+            df_for_calculation = df.drop(columns=["Cover URL", "Engagement Rate", "Engagement Rate (%)"])
+
             st.write("### Total Statistics")
             st.dataframe(pd.DataFrame([df_for_calculation.sum(numeric_only=True)]))
 
-            # Bereken gemiddelde statistieken
+            # Bereken gemiddelde statistieken zonder 'Engagement Rate'
             st.write("### Average Statistics")
-            st.dataframe(pd.DataFrame([df_for_calculation.mean(numeric_only=True).round(2)]))
+            st.dataframe(pd.DataFrame([df_for_calculation.mean(numeric_only=True).round(0)]))
         else:
             st.error("Geen geldige gegevens gevonden voor de ingevoerde video's.")
